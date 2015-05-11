@@ -4,8 +4,8 @@
 	<groupId>com.adamiworks</groupId>
 	<artifactId>MirrorDB</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>Claws</name>
-	<description>Claws SQL-JDBC converter</description>
+	<name>MirrorDB</name>
+	<description>MirrorDB SQL-JDBC converter</description>
 
 	<build>
 		<sourceDirectory>src</sourceDirectory>
@@ -48,6 +48,12 @@
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
 			<version>9.3-1102-jdbc41</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.adamiworks</groupId>
+			<artifactId>utils</artifactId>
+			<version>0.1.0</version>
 			<scope>compile</scope>
 		</dependency>
 	</dependencies>
