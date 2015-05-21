@@ -99,7 +99,7 @@ public class DateUtils {
 	 *            Doesn't matter date values.
 	 * @return a Calendar object
 	 */
-	public static final Calendar getCalendarMergingDates(Date date, Date hourMinuteMillisseconds) {
+	public static final Calendar getCalendarFromDates(Date date, Date hourMinuteMillisseconds) {
 		Calendar ret = Calendar.getInstance();
 		ret.setTime(date);
 
