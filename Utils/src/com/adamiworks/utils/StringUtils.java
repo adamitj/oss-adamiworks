@@ -12,7 +12,8 @@ public class StringUtils {
 	 * @return
 	 */
 	public static String capitalize(String s) {
-		StringBuilder sb = new StringBuilder(StringUtils.right(s, s.length() - 1));
+		StringBuilder sb = new StringBuilder(StringUtils.right(s,
+				s.length() - 1));
 		sb.insert(0, StringUtils.left(s, 1).toUpperCase());
 		return sb.toString();
 	}
@@ -139,6 +140,30 @@ public class StringUtils {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	/**
+	 * Cut the # chars from the last of a String, including any character like
+	 * spaces or tabs.
+	 * 
+	 * @param s
+	 * @param cut
+	 * @return
+	 */
+	public static String cutLast(String s, int cut) {
+		return s.substring(0, s.length() - cut);
+	}
+
+	/**
+	 * Cut the # chars from the begining of a String, including any character
+	 * like spaces or tabs.
+	 * 
+	 * @param s
+	 * @param cut
+	 * @return
+	 */
+	public static String cutFirst(String s, int cut) {
+		return s.substring(cut, s.length());
 	}
 
 }
