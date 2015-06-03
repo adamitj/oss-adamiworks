@@ -166,4 +166,15 @@ public class StringUtils {
 		return s.substring(cut, s.length());
 	}
 
+	/**
+	 * Calculates Levenshtein distance similarity of two given Strings.
+	 * 
+	 * @param s1
+	 * @param s2
+	 * @return a double from 0.0 to 1.0
+	 */
+	public static double similarity(String s1, String s2) {
+		return StringSimilarity.similarity(s1, s2);
+	}
+
 }
