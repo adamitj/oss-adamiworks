@@ -1,8 +1,12 @@
 package com.adamiworks.utils;
 
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class StringUtils {
 	/**
@@ -175,6 +179,121 @@ public class StringUtils {
 	 */
 	public static double similarity(String s1, String s2) {
 		return StringSimilarity.similarity(s1, s2);
+	}
+
+	/**
+	 * Calculates Levenshtein distance similarity of two given composite names.
+	 * For instance, if you compare composite names like "TIAGO JOSE ADAMI" and
+	 * "TIAGO ADAMI JOSE" the diff distance is 0.375.
+	 * 
+	 * With this method, the distance should be 1.0.
+	 * 
+	 * @param name1
+	 * @param name2
+	 * @return
+	 */
+	public static double nameSimilarity(String name1, String name2) {
+		String find[] = { "Ã", "Á", "À", "Â", "É", "È", "Ê", "Í", "Î", "Ì",
+				"Ò", "Ó", "Õ", "Ô", "Ù", "Ú", "Û", "Ç" };
+		String swap[] = { "A", "A", "A", "A", "E", "E", "E", "I", "I", "I",
+				"O", "O", "O", "O", "U", "U", "U", "C" };
+
+		name1 = name1.trim().toUpperCase();
+		name2 = name2.trim().toUpperCase();
+
+		for (int i = 0; i < find.length; i++) {
+			name1 = name1.replaceAll(find[i], swap[i]);
+			name2 = name2.replaceAll(find[i], swap[i]);
+		}
+
+		String n1[] = name1.trim().split(" ");
+		String n2[] = name2.trim().split(" ");
+
+		BigDecimal d1 = new BigDecimal(StringUtils.calculateSimilarityArray(n1,
+				n2));
+		BigDecimal d2 = new BigDecimal(StringUtils.calculateSimilarityArray(n2,
+				n1));
+
+		double distance = (d1.add(d2)).divide(new BigDecimal(2)).doubleValue();
+
+		return distance;
+	}
+
+	/**
+	 * Returns the distance similarity for n1 using the highest similarity value
+	 * for n1[i] within all elements of n2[].
+	 * 
+	 * @param array1
+	 * @param array2
+	 * @return
+	 */
+	private static double calculateSimilarityArray(String n1[], String n2[]) {
+		double dis1[] = new double[n1.length];
+		int pos = 0;
+
+		List<String> list1 = new ArrayList<String>();
+		List<String> list2 = new ArrayList<String>();
+
+		for (String s : n1) {
+			list1.add(s);
+		}
+
+		for (String s : n2) {
+			list2.add(s);
+		}
+
+		/**
+		 * Removes all perfect matches
+		 */
+		for (int i = 0; i < list1.size(); i++) {
+			String s1 = list1.get(i);
+
+			for (int j = 0; j < list2.size(); j++) {
+				String s2 = list2.get(j);
+
+				if (s1.trim().toUpperCase().equals(s2.trim().toUpperCase())) {
+					list1.remove(i);
+					list2.remove(j);
+					dis1[pos] = 1.0d;
+					pos++;
+					i--;
+					break;
+				}
+			}
+		}
+
+		/**
+		 * 
+		 */
+		for (int i = 0; i < list1.size(); i++) {
+			String s1 = list1.get(i);
+
+			for (String s2 : list2) {
+				double d = StringUtils.similarity(s1, s2);
+
+				if (d > dis1[pos]) {
+					dis1[pos] = d;
+				}
+
+				if (d == 1.0) {
+					break;
+				}
+			}
+
+			pos++;
+		}
+
+		BigDecimal distance = new BigDecimal(0);
+		BigDecimal divisor = new BigDecimal(n1.length);
+
+		for (int i = 0; i < dis1.length; i++) {
+			BigDecimal d = new BigDecimal(dis1[i]);
+			distance = distance.add(d);
+		}
+
+		distance = distance.divide(divisor, 6, RoundingMode.HALF_UP);
+
+		return distance.doubleValue();
 	}
 
 }
