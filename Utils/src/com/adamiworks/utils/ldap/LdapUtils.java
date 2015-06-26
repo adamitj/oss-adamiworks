@@ -11,6 +11,7 @@ import javax.naming.CommunicationException;
 import javax.naming.Context;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
+import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
@@ -94,7 +95,8 @@ public class LdapUtils {
 	 * @param basedn
 	 * @param varUid
 	 */
-	public LdapUtils(String host, int port, boolean useSSL, boolean ignoreCertificates, String basedn, String varUid) {
+	public LdapUtils(String host, int port, boolean useSSL,
+			boolean ignoreCertificates, String basedn, String varUid) {
 		super();
 		this.host = host;
 		this.port = port;
@@ -102,6 +104,23 @@ public class LdapUtils {
 		this.ignoreCertificates = ignoreCertificates;
 		this.basedn = basedn;
 		this.varUid = varUid;
+	}
+
+	/**
+	 * Creates a new DirContext based on Ldap attribute values.
+	 * 
+	 * @return
+	 * @throws NamingException
+	 */
+	private DirContext getDirContext() throws NamingException {
+		String url = this.getUrlWithoutSsl() + "/" + this.basedn;
+		Hashtable<String, Object> env = new Hashtable<String, Object>(11);
+		env.put(Context.INITIAL_CONTEXT_FACTORY,
+				"com.sun.jndi.ldap.LdapCtxFactory");
+		env.put(Context.PROVIDER_URL, url);
+		DirContext ctx = null;
+		ctx = new InitialDirContext(env);
+		return ctx;
 	}
 
 	/**
@@ -113,13 +132,15 @@ public class LdapUtils {
 	 * @throws NamingException
 	 * @throws InterruptedException
 	 */
-	public void authenticate(String uid, String password) throws NamingException, InterruptedException {
+	public void authenticate(String uid, String password)
+			throws NamingException, InterruptedException {
 
 		String url = getUrl();
 		String dn = this.getDnByUid(uid);
 
 		Properties env = new Properties();
-		env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
+		env.put(Context.INITIAL_CONTEXT_FACTORY,
+				"com.sun.jndi.ldap.LdapCtxFactory");
 		env.put(Context.PROVIDER_URL, url);
 
 		env.put(Context.SECURITY_AUTHENTICATION, "simple");
@@ -127,14 +148,15 @@ public class LdapUtils {
 		env.put(Context.SECURITY_PRINCIPAL, dn);
 		env.put(Context.SECURITY_CREDENTIALS, password);
 
-		//System.out.println(dn);
+		// System.out.println(dn);
 
 		if (this.useSSL) {
 			env.put(Context.SECURITY_PROTOCOL, "ssl");
 		}
 
 		if (this.useSSL && this.ignoreCertificates) {
-			env.put("java.naming.ldap.factory.socket", "com.adamiworks.utils.ldap.TrustAllCertificatesSSLSocketFactory");
+			env.put("java.naming.ldap.factory.socket",
+					"com.adamiworks.utils.ldap.TrustAllCertificatesSSLSocketFactory");
 		}
 
 		ldap = new InitialDirContext(env);
@@ -182,12 +204,63 @@ public class LdapUtils {
 		DirContext ctx = new InitialDirContext();
 
 		// Read supportedSASLMechanisms from root DSE
-		Attributes attrs = ctx.getAttributes(this.getUrl(), new String[] { "supportedSASLMechanisms" });
+		Attributes attrs = ctx.getAttributes(this.getUrl(),
+				new String[] { "supportedSASLMechanisms" });
 
 		System.out.println(attrs);
 
 		return attrs;
 
+	}
+
+	/**
+	 * Returns all LDAP tree without attributes.
+	 * 
+	 * @param uidVar
+	 *            the name of main unique identifier attribute. This is need for
+	 *            the empty filter works.
+	 * @return a list of all user entries within the LDAP Tree
+	 * @throws NamingException
+	 */
+	public Map<String, String> getAllUsers(String uidVar)
+			throws NamingException {
+		Map<String, String> map = new HashMap<String, String>();
+
+		NamingEnumeration<SearchResult> enumResult = null;
+		DirContext dirContext = null;
+
+		try {
+			dirContext = this.getDirContext();
+
+			SearchControls controls = new SearchControls();
+			controls.setSearchScope(SearchControls.SUBTREE_SCOPE);
+			String[] attrIDs = { uidVar };
+			controls.setReturningAttributes(attrIDs);
+			// enumResult =
+			// dirContext.search("","(&(objectCategory=person)(objectClass=user)(CN=*))",
+			// controls);
+			enumResult = dirContext.search("", "(&(" + uidVar + "=*))",
+					controls);
+
+			while (enumResult.hasMore()) {
+				SearchResult searchResult = (SearchResult) enumResult.next();
+				Attributes attributes = searchResult.getAttributes();
+				Attribute attr = attributes.get(uidVar);
+				map.put((String) attr.get(), searchResult.getNameInNamespace());
+			}
+
+		} catch (NamingException e) {
+			throw e;
+		} finally {
+			if (enumResult != null) {
+				enumResult.close();
+			}
+			if (dirContext != null) {
+				dirContext.close();
+			}
+		}
+
+		return map;
 	}
 
 	/**
@@ -200,11 +273,13 @@ public class LdapUtils {
 	 * @throws InterruptedException
 	 */
 	@SuppressWarnings("rawtypes")
-	public String getDnByUid(String uid) throws NamingException, InterruptedException {
+	public String getDnByUid(String uid) throws NamingException,
+			InterruptedException {
 		String url = this.getUrlWithoutSsl() + "/" + this.basedn;
 
 		Hashtable<String, Object> env = new Hashtable<String, Object>(11);
-		env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
+		env.put(Context.INITIAL_CONTEXT_FACTORY,
+				"com.sun.jndi.ldap.LdapCtxFactory");
 		env.put(Context.PROVIDER_URL, url);
 
 		String ret = "uid=" + uid;
@@ -219,7 +294,9 @@ public class LdapUtils {
 					break;
 				} catch (CommunicationException ce) {
 					// wait 5 secs before try again
-					System.out.println("ERROR COMMUNICATING WITH LDAP. RETRY IN 5 SEC. STEP " + (i + 1) + " OF 3");
+					System.out
+							.println("ERROR COMMUNICATING WITH LDAP. RETRY IN 5 SEC. STEP "
+									+ (i + 1) + " OF 3");
 					Thread.sleep(5000);
 
 					if (i + 1 == 3) {
@@ -233,9 +310,10 @@ public class LdapUtils {
 			SearchControls controls = new SearchControls();
 			controls.setSearchScope(SearchControls.SUBTREE_SCOPE);
 
-			NamingEnumeration answer = ctx.search("", "(" + this.varUid.trim() + "=" + uid + ")", controls);
-			// NamingEnumeration answer = ctx.search(this.basedn, "(" +
-			// this.varUid.trim() + "=" + uid + ")", controls);
+			NamingEnumeration answer = null;
+
+			answer = ctx.search("", "(" + this.varUid.trim() + "=" + uid + ")",
+					controls);
 
 			while (answer.hasMore()) {
 				SearchResult sr = (SearchResult) answer.next();
@@ -270,7 +348,8 @@ public class LdapUtils {
 	 * @return a list of groups
 	 * @throws NamingException
 	 */
-	public List<String> getLdapOuByUid(String uid, String baseDn) throws NamingException {
+	public List<String> getLdapOuByUid(String uid, String baseDn)
+			throws NamingException {
 		List<String> ouList = new ArrayList<String>();
 		String split[];
 
@@ -298,13 +377,15 @@ public class LdapUtils {
 	 * @throws NamingException
 	 */
 	@SuppressWarnings("rawtypes")
-	public Map<String, String> getLdapProperties(String uid) throws NamingException {
+	public Map<String, String> getLdapProperties(String uid)
+			throws NamingException {
 		Map<String, String> mapa = new HashMap<String, String>();
 
 		String url = this.getUrlWithoutSsl() + "/" + this.basedn;
 
 		Hashtable<String, Object> env = new Hashtable<String, Object>(11);
-		env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
+		env.put(Context.INITIAL_CONTEXT_FACTORY,
+				"com.sun.jndi.ldap.LdapCtxFactory");
 		env.put(Context.PROVIDER_URL, url);
 
 		DirContext ctx = null;
@@ -316,7 +397,8 @@ public class LdapUtils {
 			SearchControls controls = new SearchControls();
 			controls.setSearchScope(SearchControls.SUBTREE_SCOPE);
 
-			NamingEnumeration answer = ctx.search("", "(" + this.varUid + "=" + uid + ")", controls);
+			NamingEnumeration answer = ctx.search("", "(" + this.varUid + "="
+					+ uid + ")", controls);
 
 			while (answer.hasMore()) {
 				SearchResult result = (SearchResult) answer.next();
@@ -366,7 +448,8 @@ public class LdapUtils {
 		String url = this.getUrlWithoutSsl() + "/" + this.basedn;
 
 		Hashtable<String, Object> env = new Hashtable<String, Object>(11);
-		env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
+		env.put(Context.INITIAL_CONTEXT_FACTORY,
+				"com.sun.jndi.ldap.LdapCtxFactory");
 		env.put(Context.PROVIDER_URL, url);
 
 		DirContext ctx = null;
@@ -378,7 +461,8 @@ public class LdapUtils {
 			SearchControls controls = new SearchControls();
 			controls.setSearchScope(SearchControls.SUBTREE_SCOPE);
 
-			NamingEnumeration answer = ctx.search("", "(" + this.varUid + "=*)", controls);
+			NamingEnumeration answer = ctx.search("",
+					"(" + this.varUid + "=*)", controls);
 
 			while (answer.hasMore()) {
 				SearchResult result = (SearchResult) answer.next();
@@ -425,7 +509,8 @@ public class LdapUtils {
 		String url = this.getUrlWithoutSsl() + "/" + this.basedn;
 
 		Hashtable<String, Object> env = new Hashtable<String, Object>(11);
-		env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
+		env.put(Context.INITIAL_CONTEXT_FACTORY,
+				"com.sun.jndi.ldap.LdapCtxFactory");
 		env.put(Context.PROVIDER_URL, url);
 
 		DirContext ctx = null;
@@ -437,7 +522,8 @@ public class LdapUtils {
 			SearchControls controls = new SearchControls();
 			controls.setSearchScope(SearchControls.SUBTREE_SCOPE);
 
-			NamingEnumeration answer = ctx.search("", "(" + this.varUid + "=*)", controls);
+			NamingEnumeration answer = ctx.search("",
+					"(" + this.varUid + "=*)", controls);
 
 			while (answer.hasMore()) {
 				SearchResult result = (SearchResult) answer.next();
