@@ -8,6 +8,43 @@ import java.util.concurrent.TimeUnit;
 public class DateUtils {
 
 	/**
+	 * Create a Date object based on default Calendar instance.
+	 * 
+	 * @param year
+	 * @param month
+	 * @param dayOfMonth
+	 * @param hourOfDay
+	 * @param minute
+	 * @param second
+	 * @param milissecond
+	 * @return
+	 */
+	public static Date createDateObject(Integer year, Integer month,
+			Integer dayOfMonth, Integer hourOfDay, Integer minute,
+			Integer second, Integer milissecond) {
+		Calendar c = Calendar.getInstance();
+
+		c.set(Calendar.YEAR, year);
+		c.set(Calendar.MONTH, month);
+		c.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+
+		if (hourOfDay != null) {
+			c.set(Calendar.HOUR_OF_DAY, hourOfDay);
+		}
+		if (minute != null) {
+			c.set(Calendar.MINUTE, minute);
+		}
+		if (second != null) {
+			c.set(Calendar.SECOND, second);
+		}
+		if (milissecond != null) {
+			c.set(Calendar.MILLISECOND, milissecond);
+		}
+
+		return c.getTime();
+	}
+
+	/**
 	 * Facade method to format a date into a String.
 	 * 
 	 * @param date
@@ -60,7 +97,8 @@ public class DateUtils {
 	 * @param endD2
 	 * @return
 	 */
-	public static boolean conflicts(Date startD1, Date endD1, Date startD2, Date endD2) {
+	public static boolean conflicts(Date startD1, Date endD1, Date startD2,
+			Date endD2) {
 		Calendar calStartD1 = Calendar.getInstance();
 		Calendar calEndD1 = Calendar.getInstance();
 		Calendar calStartD2 = Calendar.getInstance();
@@ -74,13 +112,16 @@ public class DateUtils {
 		return DateUtils.conflicts(calStartD1, calEndD1, calStartD2, calEndD2);
 	}
 
-	public static boolean conflicts(Calendar calStartD1, Calendar calEndD1, Calendar calStartD2, Calendar calEndD2) {
-		if (calStartD1.getTimeInMillis() >= calStartD2.getTimeInMillis() && calStartD1.getTimeInMillis() < calEndD2.getTimeInMillis()) {
+	public static boolean conflicts(Calendar calStartD1, Calendar calEndD1,
+			Calendar calStartD2, Calendar calEndD2) {
+		if (calStartD1.getTimeInMillis() >= calStartD2.getTimeInMillis()
+				&& calStartD1.getTimeInMillis() < calEndD2.getTimeInMillis()) {
 			// If start1 is between start2 and end2
 			return true;
 		}
 
-		if (calEndD1.getTimeInMillis() > calStartD2.getTimeInMillis() && calEndD1.getTimeInMillis() <= calEndD2.getTimeInMillis()) {
+		if (calEndD1.getTimeInMillis() > calStartD2.getTimeInMillis()
+				&& calEndD1.getTimeInMillis() <= calEndD2.getTimeInMillis()) {
 			// If start1 is between start2 and end2
 			return true;
 		}
@@ -99,7 +140,8 @@ public class DateUtils {
 	 *            Doesn't matter date values.
 	 * @return a Calendar object
 	 */
-	public static final Calendar getCalendarFromDates(Date date, Date hourMinuteMillisseconds) {
+	public static final Calendar getCalendarFromDates(Date date,
+			Date hourMinuteMillisseconds) {
 		Calendar ret = Calendar.getInstance();
 		ret.setTime(date);
 
