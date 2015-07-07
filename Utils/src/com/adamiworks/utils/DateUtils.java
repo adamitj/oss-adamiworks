@@ -6,7 +6,7 @@ import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 public class DateUtils {
-
+	
 	/**
 	 * Create a Date object based on default Calendar instance.
 	 * 
