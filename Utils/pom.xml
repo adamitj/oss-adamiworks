@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.adamiworks</groupId>
 	<artifactId>utils</artifactId>
-	<version>0.1.0</version>
+	<version>0.1.1</version>
 	<name>Adamiworks Utils</name>
 	<description>Many utilities for easy coding</description>
 	<build>
@@ -32,7 +32,13 @@
 			<groupId>javax.mail</groupId>
 			<artifactId>javax.mail-api</artifactId>
 			<version>1.5.2</version>
-			<scope>compile</scope>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-core</artifactId>
+			<version>4.3.7.Final</version>
+			<scope>provided</scope>
 		</dependency>
 	</dependencies>
 </project>

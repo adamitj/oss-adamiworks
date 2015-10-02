@@ -1,12 +1,14 @@
 package com.adamiworks.utils;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-public class DateUtils {
-	
+public class DateTimeUtils {
+
 	/**
 	 * Create a Date object based on default Calendar instance.
 	 * 
@@ -67,7 +69,7 @@ public class DateUtils {
 	 *            The number of days to sum
 	 * @return The new date after adding days
 	 */
-	public static Date daysAfter(Date date, int days) {
+	public static Date addDays(Date date, int days) {
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(date);
 		cal.add(Calendar.DAY_OF_MONTH, days);
@@ -86,6 +88,32 @@ public class DateUtils {
 	public static Long dateDiff(Date d1, Date d2) {
 		long diff = d2.getTime() - d1.getTime();
 		return TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS);
+	}
+
+	/**
+	 * Calculate the seconds between two dates
+	 * 
+	 * @param startDate
+	 * @param endDate
+	 * @return
+	 */
+	public static Long secondsAfter(Date startDate, Date endDate) {
+		long secs = (endDate.getTime() - startDate.getTime()) / 1000;
+		return secs;
+	}
+
+	/**
+	 * Returns the number of hours between two dates
+	 * 
+	 * @param startDate
+	 * @param endDate
+	 * @return
+	 */
+	public static Long hoursAfter(Date startDate, Date endDate) {
+		long secs = DateTimeUtils.secondsAfter(startDate, endDate);
+		BigDecimal bdSecs = new BigDecimal(String.valueOf(secs));
+		return bdSecs.divide(new BigDecimal("3600"), 6, RoundingMode.HALF_DOWN)
+				.longValue();
 	}
 
 	/**
@@ -109,7 +137,8 @@ public class DateUtils {
 		calStartD2.setTime(startD2);
 		calEndD2.setTime(endD2);
 
-		return DateUtils.conflicts(calStartD1, calEndD1, calStartD2, calEndD2);
+		return DateTimeUtils.conflicts(calStartD1, calEndD1, calStartD2,
+				calEndD2);
 	}
 
 	public static boolean conflicts(Calendar calStartD1, Calendar calEndD1,
