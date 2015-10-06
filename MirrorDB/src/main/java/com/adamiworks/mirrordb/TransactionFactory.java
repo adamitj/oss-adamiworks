@@ -1,6 +1,9 @@
 package com.adamiworks.mirrordb;
 
 import java.beans.PropertyVetoException;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Properties;
 
@@ -10,6 +13,17 @@ import com.mchange.v2.c3p0.ComboPooledDataSource;
 
 public class TransactionFactory {
 	private Properties properties;
+
+	public TransactionFactory(File propertiesFile) throws IOException {
+		super();
+		FileInputStream fis;
+		Properties p = null;
+		fis = new FileInputStream(propertiesFile);
+		p = new Properties();
+		p.load(fis);
+		fis.close();
+		this.properties = p;
+	}
 
 	public TransactionFactory(Properties properties) {
 		super();
@@ -74,8 +88,8 @@ public class TransactionFactory {
 
 		return cpds;
 	}
-	
-	public Transaction createTransaction() throws PersistenceException, SQLException{
+
+	public Transaction createTransaction() throws PersistenceException, SQLException {
 		Transaction transaction = new Transaction(this.createComboPooledDataSource());
 		return transaction;
 	}

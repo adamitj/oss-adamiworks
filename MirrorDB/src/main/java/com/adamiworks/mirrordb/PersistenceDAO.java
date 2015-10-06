@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -40,7 +41,6 @@ import com.adamiworks.mirrordb.util.ReflectionsUtil;
 public abstract class PersistenceDAO<E> {
 
 	private boolean debug = true;
-	private Connection connection;
 	private Class<E> pojoClass;
 	private List<ColumnDescriptor> primaryKeyColumns = null;
 	private List<ColumnDescriptor> columns = null;
@@ -49,6 +49,7 @@ public abstract class PersistenceDAO<E> {
 	private String sqlDelete = null;
 	private String sqlSelect = null;
 	private String tableName = null;
+	private Transaction transaction = null;
 
 	/**
 	 * Creates a new Persistence Util triggering SQL Statements generation
@@ -58,9 +59,10 @@ public abstract class PersistenceDAO<E> {
 	 * @throws PersistencePojoWithoutPrimaryKey
 	 * @throws SQLException
 	 */
-	public PersistenceDAO(Transaction transaction) throws PersistenceAnnotationNotFound, PersistencePojoWithoutPrimaryKey, SQLException {
+	public PersistenceDAO(Transaction transaction)
+			throws PersistenceAnnotationNotFound, PersistencePojoWithoutPrimaryKey, SQLException {
 		super();
-		this.connection = transaction.getConnection();
+		this.transaction = transaction;
 		this.pojoClass = getTypeParameterClass();
 
 		ReflectionsUtil ru = new ReflectionsUtil();
@@ -328,7 +330,7 @@ public abstract class PersistenceDAO<E> {
 				System.out.println(sqlInsert);
 			}
 
-			pstmt = connection.prepareStatement(sqlInsert);
+			pstmt = transaction.getConnection().prepareStatement(sqlInsert);
 			for (int i = 0; i < this.columns.size(); i++) {
 				ColumnDescriptor cd = this.columns.get(i);
 				Object nulls[] = null;
@@ -364,7 +366,7 @@ public abstract class PersistenceDAO<E> {
 				System.out.println(sqlDelete);
 			}
 
-			pstmt = connection.prepareStatement(sqlDelete);
+			pstmt = transaction.getConnection().prepareStatement(sqlDelete);
 
 			// primary key columns
 			for (int i = 0; i < this.primaryKeyColumns.size(); i++) {
@@ -401,7 +403,7 @@ public abstract class PersistenceDAO<E> {
 				System.out.println(sqlUpdate);
 			}
 
-			pstmt = connection.prepareStatement(sqlUpdate);
+			pstmt = transaction.getConnection().prepareStatement(sqlUpdate);
 			int x = 0;
 
 			// First all data columns
@@ -497,14 +499,14 @@ public abstract class PersistenceDAO<E> {
 		ResultSet rs = null;
 
 		if (args == null || args.isEmpty()) {
-			Statement stmt = connection.createStatement();
+			Statement stmt = transaction.getConnection().createStatement();
 			if (limit > 0) {
 				stmt.setMaxRows(limit);
 			}
 			rs = stmt.executeQuery(sql);
 
 		} else {
-			NamedParameterStatement nstmt = new NamedParameterStatement(connection, sql);
+			NamedParameterStatement nstmt = new NamedParameterStatement(transaction.getConnection(), sql);
 			Set<String> keys = args.keySet();
 			for (String s : keys) {
 				Object value = args.get(s);
@@ -535,7 +537,8 @@ public abstract class PersistenceDAO<E> {
 	 * @throws SQLException
 	 */
 	@SuppressWarnings("unchecked")
-	public List<E> selectObjects(String sql, Map<String, Object> args, int limit) throws PersistenceException, SQLException {
+	public List<E> selectObjects(String sql, Map<String, Object> args, int limit)
+			throws PersistenceException, SQLException {
 		List<E> list = null;
 
 		try {
@@ -556,7 +559,8 @@ public abstract class PersistenceDAO<E> {
 			throw new PersistenceException("Class not found [" + pojoClass.getName() + "]");
 		} catch (NoSuchMethodException e) {
 			e.printStackTrace();
-			throw new PersistenceException("No default Constructor method (without arguments) for [" + pojoClass.getName() + "]");
+			throw new PersistenceException(
+					"No default Constructor method (without arguments) for [" + pojoClass.getName() + "]");
 		} catch (SecurityException e) {
 			e.printStackTrace();
 			throw new PersistenceException("SecurityException trying to instantiate [" + pojoClass.getName() + "]");
@@ -565,13 +569,16 @@ public abstract class PersistenceDAO<E> {
 			throw new PersistenceException("Could not instantiate [" + pojoClass.getName() + "]");
 		} catch (IllegalAccessException e) {
 			e.printStackTrace();
-			throw new PersistenceException("IllegalAccessException trying to instantiate [" + pojoClass.getName() + "]");
+			throw new PersistenceException(
+					"IllegalAccessException trying to instantiate [" + pojoClass.getName() + "]");
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
-			throw new PersistenceException("IllegalArgumentException trying to instantiate [" + pojoClass.getName() + "]");
+			throw new PersistenceException(
+					"IllegalArgumentException trying to instantiate [" + pojoClass.getName() + "]");
 		} catch (InvocationTargetException e) {
 			e.printStackTrace();
-			throw new PersistenceException("InvocationTargetException trying to instantiate [" + pojoClass.getName() + "]");
+			throw new PersistenceException(
+					"InvocationTargetException trying to instantiate [" + pojoClass.getName() + "]");
 		}
 
 		return list;
@@ -609,7 +616,8 @@ public abstract class PersistenceDAO<E> {
 		List<E> list = this.selectObjects(sql, args);
 
 		if (list.size() > 1) {
-			throw new PersistenceException("More than one object found. Review your SQL statement [" + pojoClass.getName() + "]");
+			throw new PersistenceException(
+					"More than one object found. Review your SQL statement [" + pojoClass.getName() + "]");
 		}
 
 		return list.get(0);
@@ -649,7 +657,7 @@ public abstract class PersistenceDAO<E> {
 			System.out.println(sql.toString());
 			System.out.println("\n\n###");
 
-			Statement s = connection.createStatement();
+			Statement s = transaction.getConnection().createStatement();
 			s.executeUpdate(sql.toString());
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -657,8 +665,31 @@ public abstract class PersistenceDAO<E> {
 		}
 	}
 
-	public Connection getConnection() {
-		return connection;
+	/**
+	 * Retrieves a map containing the PK values of the object.
+	 * 
+	 * @param obj
+	 * @return
+	 * @throws InvocationTargetException
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 */
+	public Map<String, Object> getArgsFromPk(E obj)
+			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		Map<String, Object> map = new HashMap<String, Object>();
+
+		for (int i = 0; i < this.primaryKeyColumns.size(); i++) {
+			ColumnDescriptor cd = this.primaryKeyColumns.get(i);
+			Object nulls[] = null;
+			Object value = cd.getGetter().invoke(obj, nulls);
+			map.put(cd.getAnnotatedName(), value);
+		}
+
+		return map;
+	}
+
+	public Connection getConnection() throws SQLException {
+		return transaction.getConnection();
 	}
 
 	public Class<E> getPojoClass() {

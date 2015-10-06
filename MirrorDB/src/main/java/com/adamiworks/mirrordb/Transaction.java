@@ -39,9 +39,10 @@ public class Transaction {
 					//
 				}
 			}
-			connection = cpds.getConnection();
-			connection.setAutoCommit(autoCommit);
 		}
+		
+		connection = cpds.getConnection();
+		connection.setAutoCommit(autoCommit);
 	}
 
 	/**
