@@ -22,7 +22,7 @@ import com.adamiworks.mirrordb.annotations.Column;
 import com.adamiworks.mirrordb.annotations.Table;
 import com.adamiworks.mirrordb.exception.PersistenceAnnotationNotFound;
 import com.adamiworks.mirrordb.exception.PersistenceException;
-import com.adamiworks.mirrordb.exception.PersistencePojoWithoutPrimaryKey;
+import com.adamiworks.mirrordb.exception.PersistenceEntityWithoutPrimaryKey;
 import com.adamiworks.mirrordb.util.ColumnDescriptor;
 import com.adamiworks.mirrordb.util.NamedParameterStatement;
 import com.adamiworks.mirrordb.util.ReflectionsUtil;
@@ -56,11 +56,11 @@ public abstract class PersistenceDAO<E> {
 	 * 
 	 * @param transaction
 	 * @throws PersistenceAnnotationNotFound
-	 * @throws PersistencePojoWithoutPrimaryKey
+	 * @throws PersistenceEntityWithoutPrimaryKey
 	 * @throws SQLException
 	 */
 	public PersistenceDAO(Transaction transaction)
-			throws PersistenceAnnotationNotFound, PersistencePojoWithoutPrimaryKey, SQLException {
+			throws PersistenceAnnotationNotFound, PersistenceEntityWithoutPrimaryKey, SQLException {
 		super();
 		this.transaction = transaction;
 		this.pojoClass = getTypeParameterClass();
@@ -70,7 +70,7 @@ public abstract class PersistenceDAO<E> {
 		this.columns = ru.captureFields(pojoClass, false);
 
 		if (this.primaryKeyColumns.size() == 0) {
-			throw new PersistencePojoWithoutPrimaryKey(this.pojoClass);
+			throw new PersistenceEntityWithoutPrimaryKey(this.pojoClass);
 		}
 
 		this.sqlInsert = this.generateSqlInsert();
