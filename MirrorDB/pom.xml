@@ -3,10 +3,9 @@
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.adamiworks</groupId>
-	<artifactId>MirrorDB</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<artifactId>mirrordb</artifactId>
 	<packaging>jar</packaging>
-	<name>MirrorDB</name>
+	<name>mirrordb</name>
 	<description>MirrorDB SQL-JDBC converter</description>
 
 	<build>
@@ -59,4 +58,5 @@
 			<scope>compile</scope>
 		</dependency>
 	</dependencies>
+	<version>1.0.0</version>
 </project>

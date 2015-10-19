@@ -48,6 +48,8 @@ public abstract class PersistenceDAO<E> {
 	private String sqlUpdate = null;
 	private String sqlDelete = null;
 	private String sqlSelect = null;
+	private String schemaName = null;
+	private String fullTableName = null;
 	private String tableName = null;
 	private Transaction transaction = null;
 
@@ -77,6 +79,29 @@ public abstract class PersistenceDAO<E> {
 		this.sqlUpdate = this.generateSqlUpdate();
 		this.sqlDelete = this.generateSqlDelete();
 		this.sqlSelect = this.generateSqlSelect();
+
+		retrieveTableName();
+	}
+
+	/**
+	 * Set schema and table names.
+	 * 
+	 * @throws PersistenceAnnotationNotFound
+	 */
+	private void retrieveTableName() throws PersistenceAnnotationNotFound {
+		String schema = null;
+		String table = null;
+
+		if (!pojoClass.isAnnotationPresent(Table.class)) {
+			throw new PersistenceAnnotationNotFound(pojoClass, "Table");
+		}
+
+		schema = pojoClass.getAnnotation(Table.class).schema().trim().toUpperCase();
+		table = pojoClass.getAnnotation(Table.class).name().trim().toUpperCase();
+
+		this.schemaName = schema;
+		this.tableName = table;
+		this.fullTableName = ((schema != null && !schema.isEmpty()) ? schema + "." + table : table);
 	}
 
 	/**
@@ -99,23 +124,8 @@ public abstract class PersistenceDAO<E> {
 	 * @throws PersistenceAnnotationNotFound
 	 */
 	private String generateSqlSelect() throws PersistenceAnnotationNotFound {
-		String schema = null;
-		String table = null;
-		String tableName = null;
 		StringBuilder sql = new StringBuilder("SELECT ");
-
-		if (!pojoClass.isAnnotationPresent(Table.class)) {
-			throw new PersistenceAnnotationNotFound(pojoClass, "Table");
-		}
-
-		schema = pojoClass.getAnnotation(Table.class).schema().trim().toUpperCase();
-		table = pojoClass.getAnnotation(Table.class).name().trim().toUpperCase();
-
-		tableName = ((schema != null && !schema.isEmpty()) ? schema + "." + table : table);
-
-		this.tableName = tableName;
-
-		sql.append(tableName).append(" ( ");
+		sql.append(fullTableName).append(" ( ");
 
 		// Get fields
 		Field fields[] = pojoClass.getDeclaredFields();
@@ -142,7 +152,7 @@ public abstract class PersistenceDAO<E> {
 			}
 		}
 
-		sql.append("FROM ").append(tableName);
+		sql.append("FROM ").append(fullTableName);
 
 		return sql.toString();
 	}
@@ -157,22 +167,10 @@ public abstract class PersistenceDAO<E> {
 	 *             and for attributes
 	 */
 	private String generateSqlInsert() throws PersistenceAnnotationNotFound {
-		String schema = null;
-		String table = null;
-		String tableName = null;
 		StringBuilder sql = new StringBuilder("INSERT INTO ");
 		StringBuilder values = new StringBuilder("VALUES ( ");
 
-		if (!pojoClass.isAnnotationPresent(Table.class)) {
-			throw new PersistenceAnnotationNotFound(pojoClass, "Table");
-		}
-
-		schema = pojoClass.getAnnotation(Table.class).schema().trim().toUpperCase();
-		table = pojoClass.getAnnotation(Table.class).name().trim().toUpperCase();
-
-		tableName = ((schema != null && !schema.isEmpty()) ? schema + "." + table : table);
-
-		sql.append(tableName).append(" ( ");
+		sql.append(fullTableName).append(" ( ");
 
 		// Get fields
 		Field fields[] = pojoClass.getDeclaredFields();
@@ -217,22 +215,10 @@ public abstract class PersistenceDAO<E> {
 	 *             and for attributes
 	 */
 	private String generateSqlUpdate() throws PersistenceAnnotationNotFound {
-		String schema = null;
-		String table = null;
-		String tableName = null;
 		StringBuilder sql = new StringBuilder("UPDATE ");
 		StringBuilder where = new StringBuilder("WHERE ");
 
-		if (!pojoClass.isAnnotationPresent(Table.class)) {
-			throw new PersistenceAnnotationNotFound(pojoClass, "Table");
-		}
-
-		schema = pojoClass.getAnnotation(Table.class).schema().trim().toUpperCase();
-		table = pojoClass.getAnnotation(Table.class).name().trim().toUpperCase();
-
-		tableName = ((schema != null && !schema.isEmpty()) ? schema + "." + table : table);
-
-		sql.append(tableName).append(" SET ");
+		sql.append(fullTableName).append(" SET ");
 
 		// Get fields
 		Field fields[] = pojoClass.getDeclaredFields();
@@ -283,22 +269,10 @@ public abstract class PersistenceDAO<E> {
 	 *             and for attributes
 	 */
 	private String generateSqlDelete() throws PersistenceAnnotationNotFound {
-		String schema = null;
-		String table = null;
-		String tableName = null;
 		StringBuilder sql = new StringBuilder("DELETE FROM ");
 		StringBuilder where = new StringBuilder("WHERE ");
 
-		if (!pojoClass.isAnnotationPresent(Table.class)) {
-			throw new PersistenceAnnotationNotFound(pojoClass, "Table");
-		}
-
-		schema = pojoClass.getAnnotation(Table.class).schema().trim().toUpperCase();
-		table = pojoClass.getAnnotation(Table.class).name().trim().toUpperCase();
-
-		tableName = ((schema != null && !schema.isEmpty()) ? schema + "." + table : table);
-
-		sql.append(tableName).append(" ");
+		sql.append(fullTableName).append(" ");
 
 		for (int i = 0; i < primaryKeyColumns.size(); i++) {
 			ColumnDescriptor c = primaryKeyColumns.get(i);
@@ -441,25 +415,6 @@ public abstract class PersistenceDAO<E> {
 		}
 
 	}
-
-	// @SuppressWarnings("unchecked")
-	// public List<E> select(NamedParameterStatement query) throws SQLException,
-	// InstantiationException, IllegalAccessException, ClassNotFoundException,
-	// PersistenceException {
-	// List<E> list = null;
-	// ResultSet rs = query.executeQuery();
-	//
-	// while (rs.next()) {
-	// if (list == null) {
-	// list = new ArrayList<E>();
-	// }
-	// E obj = ((E) Class.forName(pojoClass.getName()).newInstance());
-	// this.retrieveValuesFromResultSet(obj, rs);
-	// list.add(obj);
-	// }
-	//
-	// return null;
-	// }
 
 	/**
 	 * This is an auxiliary method for using SQL SELECT instructions and
@@ -640,7 +595,7 @@ public abstract class PersistenceDAO<E> {
 	public void lockRowsWithUpdate(String where) throws PersistenceException {
 		try {
 			StringBuilder sql = new StringBuilder("UPDATE ");
-			sql.append(this.tableName).append(" ");
+			sql.append(this.fullTableName).append(" ");
 			sql.append("SET ");
 
 			for (int i = 0; i < this.primaryKeyColumns.size(); i++) {
@@ -730,6 +685,14 @@ public abstract class PersistenceDAO<E> {
 
 	public String getSqlDelete() {
 		return sqlDelete;
+	}
+
+	public String getSchemaName() {
+		return schemaName;
+	}
+
+	public String getFullTableName() {
+		return fullTableName;
 	}
 
 }
