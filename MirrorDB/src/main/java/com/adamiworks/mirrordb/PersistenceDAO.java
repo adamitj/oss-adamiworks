@@ -62,7 +62,8 @@ public abstract class PersistenceDAO<E> {
 	 * @throws SQLException
 	 */
 	public PersistenceDAO(Transaction transaction)
-			throws PersistenceAnnotationNotFound, PersistenceEntityWithoutPrimaryKey, SQLException {
+			throws PersistenceAnnotationNotFound,
+			PersistenceEntityWithoutPrimaryKey, SQLException {
 		super();
 		this.transaction = transaction;
 		this.pojoClass = getTypeParameterClass();
@@ -96,12 +97,15 @@ public abstract class PersistenceDAO<E> {
 			throw new PersistenceAnnotationNotFound(pojoClass, "Table");
 		}
 
-		schema = pojoClass.getAnnotation(Table.class).schema().trim().toUpperCase();
-		table = pojoClass.getAnnotation(Table.class).name().trim().toUpperCase();
+		schema = pojoClass.getAnnotation(Table.class).schema().trim()
+				.toUpperCase();
+		table = pojoClass.getAnnotation(Table.class).name().trim()
+				.toUpperCase();
 
 		this.schemaName = schema;
 		this.tableName = table;
-		this.fullTableName = ((schema != null && !schema.isEmpty()) ? schema + "." + table : table);
+		this.fullTableName = ((schema != null && !schema.isEmpty()) ? schema
+				+ "." + table : table);
 	}
 
 	/**
@@ -296,7 +300,8 @@ public abstract class PersistenceDAO<E> {
 	 * @throws PersistenceAnnotationNotFound
 	 * @throws PersistenceException
 	 */
-	public void insert(E obj) throws PersistenceAnnotationNotFound, PersistenceException {
+	public void insert(E obj) throws PersistenceAnnotationNotFound,
+			PersistenceException {
 		PreparedStatement pstmt;
 
 		try {
@@ -311,7 +316,8 @@ public abstract class PersistenceDAO<E> {
 				Object value = cd.getGetter().invoke(obj, nulls);
 
 				if (value instanceof java.util.Date) {
-					pstmt.setDate(i + 1, new java.sql.Date(((java.util.Date) value).getTime()));
+					pstmt.setDate(i + 1, new java.sql.Date(
+							((java.util.Date) value).getTime()));
 				} else {
 					pstmt.setObject(i + 1, value);
 				}
@@ -348,7 +354,8 @@ public abstract class PersistenceDAO<E> {
 				Object nulls[] = null;
 				Object value = cd.getGetter().invoke(obj, nulls);
 				if (value instanceof java.util.Date) {
-					pstmt.setDate(i + 1, new java.sql.Date(((java.util.Date) value).getTime()));
+					pstmt.setDate(i + 1, new java.sql.Date(
+							((java.util.Date) value).getTime()));
 				} else {
 					pstmt.setObject(i + 1, value);
 				}
@@ -388,7 +395,10 @@ public abstract class PersistenceDAO<E> {
 				Object value = cd.getGetter().invoke(obj, nulls);
 
 				if (value instanceof java.util.Date) {
-					pstmt.setDate(x, new java.sql.Date(((java.util.Date) value).getTime()));
+					pstmt.setDate(
+							x,
+							new java.sql.Date(((java.util.Date) value)
+									.getTime()));
 				} else {
 					pstmt.setObject(x, value);
 				}
@@ -401,7 +411,10 @@ public abstract class PersistenceDAO<E> {
 				Object nulls[] = null;
 				Object value = cd.getGetter().invoke(obj, nulls);
 				if (value instanceof java.util.Date) {
-					pstmt.setDate(x, new java.sql.Date(((java.util.Date) value).getTime()));
+					pstmt.setDate(
+							x,
+							new java.sql.Date(((java.util.Date) value)
+									.getTime()));
 				} else {
 					pstmt.setObject(x, value);
 				}
@@ -427,7 +440,8 @@ public abstract class PersistenceDAO<E> {
 	 * @throws PersistenceException
 	 * @throws SQLException
 	 */
-	private void retrieveValuesFromResultSet(Object o, ResultSet rs) throws PersistenceException, SQLException {
+	private void retrieveValuesFromResultSet(Object o, ResultSet rs)
+			throws PersistenceException, SQLException {
 		if (rs.getRow() > 0) {
 			try {
 				// Rolling all columns
@@ -450,7 +464,8 @@ public abstract class PersistenceDAO<E> {
 	 * @return
 	 * @throws SQLException
 	 */
-	public ResultSet selectResultSet(String sql, Map<String, Object> args, int limit) throws SQLException {
+	public ResultSet selectResultSet(String sql, Map<String, Object> args,
+			int limit) throws SQLException {
 		ResultSet rs = null;
 
 		if (args == null || args.isEmpty()) {
@@ -461,7 +476,8 @@ public abstract class PersistenceDAO<E> {
 			rs = stmt.executeQuery(sql);
 
 		} else {
-			NamedParameterStatement nstmt = new NamedParameterStatement(transaction.getConnection(), sql);
+			NamedParameterStatement nstmt = new NamedParameterStatement(
+					transaction.getConnection(), sql);
 			Set<String> keys = args.keySet();
 			for (String s : keys) {
 				Object value = args.get(s);
@@ -511,29 +527,37 @@ public abstract class PersistenceDAO<E> {
 
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
-			throw new PersistenceException("Class not found [" + pojoClass.getName() + "]");
+			throw new PersistenceException("Class not found ["
+					+ pojoClass.getName() + "]");
 		} catch (NoSuchMethodException e) {
 			e.printStackTrace();
 			throw new PersistenceException(
-					"No default Constructor method (without arguments) for [" + pojoClass.getName() + "]");
+					"No default Constructor method (without arguments) for ["
+							+ pojoClass.getName() + "]");
 		} catch (SecurityException e) {
 			e.printStackTrace();
-			throw new PersistenceException("SecurityException trying to instantiate [" + pojoClass.getName() + "]");
+			throw new PersistenceException(
+					"SecurityException trying to instantiate ["
+							+ pojoClass.getName() + "]");
 		} catch (InstantiationException e) {
 			e.printStackTrace();
-			throw new PersistenceException("Could not instantiate [" + pojoClass.getName() + "]");
+			throw new PersistenceException("Could not instantiate ["
+					+ pojoClass.getName() + "]");
 		} catch (IllegalAccessException e) {
 			e.printStackTrace();
 			throw new PersistenceException(
-					"IllegalAccessException trying to instantiate [" + pojoClass.getName() + "]");
+					"IllegalAccessException trying to instantiate ["
+							+ pojoClass.getName() + "]");
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
 			throw new PersistenceException(
-					"IllegalArgumentException trying to instantiate [" + pojoClass.getName() + "]");
+					"IllegalArgumentException trying to instantiate ["
+							+ pojoClass.getName() + "]");
 		} catch (InvocationTargetException e) {
 			e.printStackTrace();
 			throw new PersistenceException(
-					"InvocationTargetException trying to instantiate [" + pojoClass.getName() + "]");
+					"InvocationTargetException trying to instantiate ["
+							+ pojoClass.getName() + "]");
 		}
 
 		return list;
@@ -553,7 +577,8 @@ public abstract class PersistenceDAO<E> {
 	 *             if any internal exception is thrown
 	 * @throws SQLException
 	 */
-	public List<E> selectObjects(String sql, Map<String, Object> args) throws PersistenceException, SQLException {
+	public List<E> selectObjects(String sql, Map<String, Object> args)
+			throws PersistenceException, SQLException {
 		return this.selectObjects(sql, args, 0);
 	}
 
@@ -567,12 +592,14 @@ public abstract class PersistenceDAO<E> {
 	 * @throws PersistenceException
 	 * @throws SQLException
 	 */
-	public E selectOneObject(String sql, Map<String, Object> args) throws PersistenceException, SQLException {
+	public E selectOneObject(String sql, Map<String, Object> args)
+			throws PersistenceException, SQLException {
 		List<E> list = this.selectObjects(sql, args);
 
 		if (list.size() > 1) {
 			throw new PersistenceException(
-					"More than one object found. Review your SQL statement [" + pojoClass.getName() + "]");
+					"More than one object found. Review your SQL statement ["
+							+ pojoClass.getName() + "]");
 		}
 
 		return list.get(0);
@@ -600,7 +627,8 @@ public abstract class PersistenceDAO<E> {
 
 			for (int i = 0; i < this.primaryKeyColumns.size(); i++) {
 				ColumnDescriptor cd = this.primaryKeyColumns.get(i);
-				sql.append(cd.getAnnotatedName()).append("=").append(cd.getAnnotatedName());
+				sql.append(cd.getAnnotatedName()).append("=")
+						.append(cd.getAnnotatedName());
 				sql.append(i + 1 == this.primaryKeyColumns.size() ? " " : ", ");
 			}
 
@@ -621,6 +649,34 @@ public abstract class PersistenceDAO<E> {
 	}
 
 	/**
+	 * Execute SQL for INSERT, UPDATE and DELETE with named parameter arguments
+	 * 
+	 * @param sql
+	 * @param args
+	 * @throws SQLException
+	 */
+	public void executeUpdate(String sql, Map<String, Object> args)
+			throws SQLException {
+		if (args == null || args.isEmpty()) {
+			Statement stmt = transaction.getConnection().createStatement();
+			stmt.executeUpdate(sql);
+		} else {
+			NamedParameterStatement nstmt = new NamedParameterStatement(
+					transaction.getConnection(), sql);
+			Set<String> keys = args.keySet();
+			for (String s : keys) {
+				Object value = args.get(s);
+				if (value instanceof java.util.Date) {
+					nstmt.setDate(s, (Date) value);
+				} else {
+					nstmt.setObject(s, value);
+				}
+			}
+			nstmt.executeUpdate();
+		}
+	}
+
+	/**
 	 * Retrieves a map containing the PK values of the object.
 	 * 
 	 * @param obj
@@ -630,7 +686,8 @@ public abstract class PersistenceDAO<E> {
 	 * @throws IllegalAccessException
 	 */
 	public Map<String, Object> getArgsFromPk(E obj)
-			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+			throws IllegalAccessException, IllegalArgumentException,
+			InvocationTargetException {
 		Map<String, Object> map = new HashMap<String, Object>();
 
 		for (int i = 0; i < this.primaryKeyColumns.size(); i++) {
