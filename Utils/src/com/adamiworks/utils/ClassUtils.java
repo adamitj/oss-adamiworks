@@ -14,6 +14,7 @@ import java.util.jar.JarFile;
 
 import sun.net.www.protocol.file.FileURLConnection;
 
+@SuppressWarnings("restriction")
 public class ClassUtils {
 	/**
 	 * Private helper method
