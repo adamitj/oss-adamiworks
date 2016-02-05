@@ -33,6 +33,7 @@ public final class FileSync extends Thread {
 
 	private static long fileCount = 0;
 	private boolean secureMethodOn;
+	private boolean verbose;
 	private static int threadCount = 0;
 	private String threadSourceDir;
 	private String threadDestinationDir;
@@ -45,10 +46,11 @@ public final class FileSync extends Thread {
 		this.init();
 	}
 
-	public FileSync(boolean secureMethodOn) {
+	public FileSync(boolean secureMethodOn, boolean verbose) {
 		this.init();
 		FileSync.addThreadCount();
 		this.secureMethodOn = secureMethodOn;
+		this.verbose = verbose;
 	}
 
 	public static synchronized void addThreadCount() {
@@ -111,17 +113,20 @@ public final class FileSync extends Thread {
 		// the file will be sync-ed for any changes.
 		if (secureMethodOn) {
 			try {
-				Logger.getLogger(FileUtils.class.getName()).log(Level.FINE, "Calculating MD5 for " + s);
+				if (verbose)
+					Logger.getLogger(FileUtils.class.getName()).log(Level.INFO, "Calculating MD5 for " + s);
 				// Message.info(" Calculating MD5 Hash for " + s);
 				String srcMd5 = FileUtils.getHashMD5(src);
 
-				Logger.getLogger(FileUtils.class.getName()).log(Level.FINE, "Calculating MD5 for " + d);
+				if (verbose)
+					Logger.getLogger(FileUtils.class.getName()).log(Level.INFO, "Calculating MD5 for " + d);
 				// Message.info(" Calculating MD5 Hash for " + d);
 				String destMd5 = FileUtils.getHashMD5(dest);
 
 				if (!srcMd5.equals(destMd5)) {
-					Logger.getLogger(FileUtils.class.getName()).log(Level.FINE,
-							"MD5 Hash differs " + srcMd5 + " != " + srcMd5);
+					if (verbose)
+						Logger.getLogger(FileUtils.class.getName()).log(Level.INFO,
+								"MD5 Hash differs " + srcMd5 + " != " + srcMd5);
 					return true;
 				}
 			} catch (Exception ex) {
@@ -142,18 +147,18 @@ public final class FileSync extends Thread {
 	 * @return
 	 */
 	public boolean syncFile(String s, String d) {
-		boolean ret = false;
-
 		File src = new File(s);
 		File dest = new File(d);
 
 		if (this.isSyncAble(s, d)) {
 			FileUtils.fileCopy(src, dest);
+			return true;
 		} else {
-			Logger.getLogger(FileUtils.class.getName()).log(Level.INFO, "File " + d + " is up to date.");
+			if (verbose)
+				Logger.getLogger(FileUtils.class.getName()).log(Level.INFO, "File " + d + " is up to date.");
 		}
 
-		return ret;
+		return false;
 	}
 
 	/**
@@ -233,35 +238,42 @@ public final class FileSync extends Thread {
 						}
 					}
 
+					if (!sourceParentFolder.trim().endsWith(File.separator)) {
+						sourceParentFolder = sourceParentFolder.trim() + File.separator;
+					}
+					if (!destinationParentFolder.trim().endsWith(File.separator)) {
+						destinationParentFolder = destinationParentFolder.trim() + File.separator;
+					}
+
 					for (String s : folders) {
 						if (FileSync.getThreadCount() < 4) {
-							FileSync fs = new FileSync(secureMethodOn);
-							fs.setThreadParameters(sourceParentFolder + File.separator + s,
-									destinationParentFolder + File.separator + s);
+							FileSync fs = new FileSync(secureMethodOn, verbose);
+							fs.setThreadParameters(sourceParentFolder + s, destinationParentFolder + s);
 							fs.start();
 						} else {
-							this.syncFolder(sourceParentFolder + File.separator + s,
-									destinationParentFolder + File.separator + s);
+							this.syncFolder(sourceParentFolder + s, destinationParentFolder + s);
 						}
 					}
 
 					// Process all files inside the directory
 					for (String s : files) {
-						String sourceFileName = sourceParentFolder + File.separator + s;
-						String destinationFileName = destinationParentFolder + File.separator + s;
+						String sourceFileName = sourceParentFolder + s;
+						String destinationFileName = destinationParentFolder + s;
 
-						Logger.getLogger(FileSync.class.getName()).log(Level.FINE,
-								"Syncing FILE [" + sourceFileName + "] to [" + destinationFileName + "]");
-
-						System.out.println("Syncing FILE [" + sourceFileName + "] to [" + destinationFileName + "]");
+						// Logger.getLogger(FileSync.class.getName()).log(Level.INFO,
+						// "Syncing FILE [" + sourceFileName + "] to [" +
+						// destinationFileName + "]");
 
 						// Sync file
 						if (this.syncFile(sourceFileName, destinationFileName)) {
+							System.out
+									.println("Syncing FILE [" + sourceFileName + "] to [" + destinationFileName + "]");
 							fileCount++;
 						}
 					}
-					Logger.getLogger(FileSync.class.getName()).log(Level.FINE,
-							files.size() + " files processed in directory " + sourceParentFolder);
+					if (verbose)
+						Logger.getLogger(FileSync.class.getName()).log(Level.INFO,
+								files.size() + " files processed in directory " + sourceParentFolder);
 
 				}
 			} catch (Exception ex) {
