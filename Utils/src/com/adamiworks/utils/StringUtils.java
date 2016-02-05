@@ -16,8 +16,7 @@ public class StringUtils {
 	 * @return
 	 */
 	public static String capitalize(String s) {
-		StringBuilder sb = new StringBuilder(StringUtils.right(s,
-				s.length() - 1));
+		StringBuilder sb = new StringBuilder(StringUtils.right(s, s.length() - 1));
 		sb.insert(0, StringUtils.left(s, 1).toUpperCase());
 		return sb.toString();
 	}
@@ -146,6 +145,10 @@ public class StringUtils {
 		return null;
 	}
 
+	public static String getHashMD5(String arg) {
+		return generateMD5Hash(arg);
+	}
+
 	/**
 	 * Cut the # chars from the last of a String, including any character like
 	 * spaces or tabs.
@@ -193,10 +196,8 @@ public class StringUtils {
 	 * @return
 	 */
 	public static double nameSimilarity(String name1, String name2) {
-		String find[] = { "Ã", "Á", "À", "Â", "É", "È", "Ê", "Í", "Î", "Ì",
-				"Ò", "Ó", "Õ", "Ô", "Ù", "Ú", "Û", "Ç" };
-		String swap[] = { "A", "A", "A", "A", "E", "E", "E", "I", "I", "I",
-				"O", "O", "O", "O", "U", "U", "U", "C" };
+		String find[] = { "Ã", "Á", "À", "Â", "É", "È", "Ê", "Í", "Î", "Ì", "Ò", "Ó", "Õ", "Ô", "Ù", "Ú", "Û", "Ç" };
+		String swap[] = { "A", "A", "A", "A", "E", "E", "E", "I", "I", "I", "O", "O", "O", "O", "U", "U", "U", "C" };
 
 		name1 = name1.trim().toUpperCase();
 		name2 = name2.trim().toUpperCase();
@@ -209,10 +210,8 @@ public class StringUtils {
 		String n1[] = name1.trim().split(" ");
 		String n2[] = name2.trim().split(" ");
 
-		BigDecimal d1 = new BigDecimal(StringUtils.calculateSimilarityArray(n1,
-				n2));
-		BigDecimal d2 = new BigDecimal(StringUtils.calculateSimilarityArray(n2,
-				n1));
+		BigDecimal d1 = new BigDecimal(StringUtils.calculateSimilarityArray(n1, n2));
+		BigDecimal d2 = new BigDecimal(StringUtils.calculateSimilarityArray(n2, n1));
 
 		double distance = (d1.add(d2)).divide(new BigDecimal(2)).doubleValue();
 
