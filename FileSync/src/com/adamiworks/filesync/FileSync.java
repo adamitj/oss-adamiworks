@@ -5,6 +5,7 @@
 package com.adamiworks.filesync;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -151,6 +152,16 @@ public final class FileSync extends Thread {
 		File dest = new File(d);
 
 		if (this.isSyncAble(s, d)) {
+			if (dest.exists()) {
+				dest.delete();
+
+				if (dest.exists()) {
+					Logger.getLogger(FileUtils.class.getName()).log(Level.WARNING,
+							"File " + d + " could not be replaced. Check file permissions and try again.");
+
+				}
+			}
+
 			FileUtils.fileCopy(src, dest);
 			return true;
 		} else {
@@ -227,6 +238,9 @@ public final class FileSync extends Thread {
 				Logger.getLogger(FileSync.class.getName()).log(Level.FINE,
 						"Syncing DIR \"" + sourceParentFolder + "\" to \"" + destinationParentFolder + "\"");
 				String[] result = FileUtils.getDirList(sourceDir, false);
+
+				Arrays.sort(result);
+
 				// Find all files and folders inside directory
 				if (result != null && result.length > 0) {
 					for (String s : result) {
@@ -246,7 +260,7 @@ public final class FileSync extends Thread {
 					}
 
 					for (String s : folders) {
-						if (FileSync.getThreadCount() < 4) {
+						if (FileSync.getThreadCount() < 1) {
 							FileSync fs = new FileSync(secureMethodOn, verbose);
 							fs.setThreadParameters(sourceParentFolder + s, destinationParentFolder + s);
 							fs.start();
@@ -266,8 +280,10 @@ public final class FileSync extends Thread {
 
 						// Sync file
 						if (this.syncFile(sourceFileName, destinationFileName)) {
-							System.out
-									.println("Syncing FILE [" + sourceFileName + "] to [" + destinationFileName + "]");
+							// System.out.println("Syncing FILE [" +
+							// sourceFileName + "] to [" + destinationFileName +
+							// "]");
+							System.out.println(destinationFileName);
 							fileCount++;
 						}
 					}
