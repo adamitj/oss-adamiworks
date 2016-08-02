@@ -7,7 +7,7 @@
   <description>FileSync compares files of two directories X and Y copying all missing files in Y from X.</description>
   <build>
     <sourceDirectory>src</sourceDirectory>
-    <plugins>
+    <!-- plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.3</version>
@@ -16,7 +16,7 @@
           <target>1.8</target>
         </configuration>
       </plugin>
-    </plugins>
+    </plugins -->
   </build>
   <dependencies>
   	<dependency>
