@@ -33,12 +33,18 @@ public class MailSender {
 	public static final String MAIL_SMTP_AUTH = "mail.smtp.auth";
 	public static final String MAIL_SMTP_HOST = "mail.smtp.host";
 	public static final String MAIL_SMTP_PORT = "mail.smtp.port";
+	public static final String MAIL_SMTP_FROM = "mail.smtp.from";
+	public static final String MAIL_SMTP_USER = "mail.smtp.user";
+	public static final String MAIL_SMTP_PASSWORD = "mail.smtp.password";
 	public static final String MAIL_SMTP_STARTTLS_ENABLE = "mail.smtp.starttls.enable";
+	public static final String MAIL_SMTP_SSL_REQUIRED = "mail.smtp.ssl.required";
+	public static final String MAIL_SMTP_PLAIN_TEXT_OVER_TLS = "mail.smtp.plain.text.over.tls";
 	public static final String MAIL_SMTP_SOCKETFACTORY_CLASS = "mail.smtp.socketFactory.class";
 	public static final String MAIL_SMTP_CONNECTIONTIMEOUT = "mail.smtp.connectiontimeout";
 	public static final String MAIL_SMTP_TIMEOUT = "mail.smtp.timeout";
 	public static final String MAIL_SMTP_WRITETIMEOUT = "mail.smtp.writetimeout";
 	public static final String MAIL_SOCKET_TIMEOUT = "15000";
+	
 	//
 	private boolean authenticatonRequired;
 	private boolean startTLSRequired;
@@ -60,6 +66,11 @@ public class MailSender {
 	public MailSender(boolean authenticatonRequired, String host, int port, boolean ssl, boolean startTLSRequired, boolean plainTextOverTLS, String from,
 			String userName, String password) {
 		super();
+		init(authenticatonRequired, host, port, ssl, startTLSRequired, plainTextOverTLS, from, userName, password);
+	}
+
+	private void init(boolean authenticatonRequired, String host, int port, boolean ssl, boolean startTLSRequired,
+			boolean plainTextOverTLS, String from, String userName, String password) {
 		this.authenticatonRequired = authenticatonRequired;
 		this.host = host;
 		this.port = port;
@@ -80,6 +91,10 @@ public class MailSender {
 		props.put(MAIL_SMTP_CONNECTIONTIMEOUT, MAIL_SOCKET_TIMEOUT);
 		props.put(MAIL_SMTP_TIMEOUT, MAIL_SOCKET_TIMEOUT);
 		props.put(MAIL_SMTP_WRITETIMEOUT, MAIL_SOCKET_TIMEOUT);
+		if(ssl){
+			props.put(MAIL_SMTP_SSL_REQUIRED, ssl);
+		}
+			
 
 		if (plainTextOverTLS) {
 			props.put(MAIL_SMTP_SOCKETFACTORY_CLASS, MAIL_SMTP_SOCKETFACTORY_CLASSNAME);
@@ -96,6 +111,22 @@ public class MailSender {
 		mc.addMailcap("message/rfc822; x-java-content-handler=com.sun.mail.handlers.message_rfc822");
 	}
 
+	public MailSender(Properties props) {
+		super();
+		this.authenticatonRequired = Boolean.valueOf(props.getProperty(MAIL_SMTP_AUTH));
+		this.host = props.getProperty(MAIL_SMTP_HOST);
+		this.port = Integer.valueOf(props.getProperty(MAIL_SMTP_PORT));
+		this.ssl = Boolean.valueOf(props.getProperty(MAIL_SMTP_SSL_REQUIRED));
+		this.startTLSRequired = Boolean.valueOf(props.getProperty(MAIL_SMTP_STARTTLS_ENABLE));
+		this.from = props.getProperty(MAIL_SMTP_FROM);
+		this.userName = props.getProperty(MAIL_SMTP_USER);
+		this.password = props.getProperty(MAIL_SMTP_PASSWORD);
+		this.plainTextOverTLS = Boolean.valueOf(props.getProperty(MAIL_SMTP_PLAIN_TEXT_OVER_TLS));
+
+		// Inicializa sessão
+		init(authenticatonRequired, host, port, ssl, startTLSRequired, plainTextOverTLS, from, userName, password);
+	}
+	
 	public MailSender() {
 		super();
 	}

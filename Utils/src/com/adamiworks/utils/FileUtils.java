@@ -47,6 +47,16 @@ public class FileUtils {
 	 * @param fullPathAndfileName
 	 * @return
 	 */
+	public static String readTextFile(File file) {
+		return readTextFile(file.getPath());
+	}
+	
+	/**
+	 * Read an entire text file available in classpath.
+	 * 
+	 * @param fullPathAndfileName
+	 * @return
+	 */
 	public static String readTextFile(String fullPathAndfileName) {
 		InputStream is = FileUtils.class.getClassLoader().getResourceAsStream(fullPathAndfileName);
 		Scanner scanner = new Scanner(is);
