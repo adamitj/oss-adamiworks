@@ -4,25 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import javax.activation.CommandMap;
-import javax.activation.DataHandler;
-import javax.activation.DataSource;
-import javax.activation.FileDataSource;
-import javax.activation.MailcapCommandMap;
-import javax.mail.BodyPart;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.Multipart;
-import javax.mail.PasswordAuthentication;
-import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
+import org.simplejavamail.mailer.Mailer;
+import org.simplejavamail.mailer.config.ServerConfig;
+import org.simplejavamail.mailer.config.TransportStrategy;
 
 /**
- * Class representing an email SMTP server. This class does send e-mails too.
+ * Class representing an emailMessage SMTP server. This class does send e-mails
+ * too.
  * 
  * @author Tiago
  *
@@ -43,8 +31,8 @@ public class MailSender {
 	public static final String MAIL_SMTP_CONNECTIONTIMEOUT = "mail.smtp.connectiontimeout";
 	public static final String MAIL_SMTP_TIMEOUT = "mail.smtp.timeout";
 	public static final String MAIL_SMTP_WRITETIMEOUT = "mail.smtp.writetimeout";
-	public static final String MAIL_SOCKET_TIMEOUT = "15000";
-	
+	public static final String MAIL_SOCKET_TIMEOUT = "60000";
+
 	//
 	private boolean authenticatonRequired;
 	private boolean startTLSRequired;
@@ -60,55 +48,15 @@ public class MailSender {
 
 	//
 	// Objetos de controle
-	private MailcapCommandMap mc;
-	private Session session;
+//	private MailcapCommandMap mc;
+//	private Session session;
+	//
+	private Mailer mailer;
 
-	public MailSender(boolean authenticatonRequired, String host, int port, boolean ssl, boolean startTLSRequired, boolean plainTextOverTLS, String from,
-			String userName, String password) {
+	public MailSender(boolean authenticatonRequired, String host, int port, boolean ssl, boolean startTLSRequired,
+			boolean plainTextOverTLS, String from, String userName, String password) {
 		super();
 		init(authenticatonRequired, host, port, ssl, startTLSRequired, plainTextOverTLS, from, userName, password);
-	}
-
-	private void init(boolean authenticatonRequired, String host, int port, boolean ssl, boolean startTLSRequired,
-			boolean plainTextOverTLS, String from, String userName, String password) {
-		this.authenticatonRequired = authenticatonRequired;
-		this.host = host;
-		this.port = port;
-		this.ssl = ssl;
-		this.startTLSRequired = startTLSRequired;
-		this.from = from;
-		this.userName = userName;
-		this.password = password;
-		this.plainTextOverTLS = plainTextOverTLS;
-
-		// Inicializa sessão
-		Properties props = new Properties();
-
-		props.put(MAIL_SMTP_AUTH, String.valueOf(authenticatonRequired));
-		props.put(MAIL_SMTP_HOST, host);
-		props.put(MAIL_SMTP_PORT, String.valueOf(port));
-		props.put(MAIL_SMTP_STARTTLS_ENABLE, String.valueOf(startTLSRequired));
-		props.put(MAIL_SMTP_CONNECTIONTIMEOUT, MAIL_SOCKET_TIMEOUT);
-		props.put(MAIL_SMTP_TIMEOUT, MAIL_SOCKET_TIMEOUT);
-		props.put(MAIL_SMTP_WRITETIMEOUT, MAIL_SOCKET_TIMEOUT);
-		if(ssl){
-			props.put(MAIL_SMTP_SSL_REQUIRED, ssl);
-		}
-			
-
-		if (plainTextOverTLS) {
-			props.put(MAIL_SMTP_SOCKETFACTORY_CLASS, MAIL_SMTP_SOCKETFACTORY_CLASSNAME);
-		}
-
-		session = Session.getDefaultInstance(props, new javax.mail.Authenticator() {
-			protected PasswordAuthentication getPasswordAuthentication() {
-				return new PasswordAuthentication(userName, password);
-			}
-		});
-
-		mc = (MailcapCommandMap) CommandMap.getDefaultCommandMap();
-		mc.addMailcap("multipart/*; x-java-content-handler=com.sun.mail.handlers.multipart_mixed");
-		mc.addMailcap("message/rfc822; x-java-content-handler=com.sun.mail.handlers.message_rfc822");
 	}
 
 	public MailSender(Properties props) {
@@ -126,7 +74,64 @@ public class MailSender {
 		// Inicializa sessão
 		init(authenticatonRequired, host, port, ssl, startTLSRequired, plainTextOverTLS, from, userName, password);
 	}
-	
+
+	private void init(boolean authenticatonRequired, String host, int port, boolean ssl, boolean startTLSRequired,
+			boolean plainTextOverTLS, String from, String userName, String password) {
+
+		this.authenticatonRequired = authenticatonRequired;
+		this.host = host;
+		this.port = port;
+		this.ssl = ssl;
+		this.startTLSRequired = startTLSRequired;
+		this.from = from;
+		this.userName = userName;
+		this.password = password;
+		this.plainTextOverTLS = plainTextOverTLS;
+
+		// // Inicializa sessão
+		// Properties props = new Properties();
+		//
+		// props.put(MAIL_SMTP_AUTH, String.valueOf(authenticatonRequired));
+		// props.put(MAIL_SMTP_HOST, host);
+		// props.put(MAIL_SMTP_PORT, String.valueOf(port));
+		// props.put(MAIL_SMTP_STARTTLS_ENABLE,
+		// String.valueOf(startTLSRequired));
+		// props.put(MAIL_SMTP_CONNECTIONTIMEOUT, MAIL_SOCKET_TIMEOUT);
+		// props.put(MAIL_SMTP_TIMEOUT, MAIL_SOCKET_TIMEOUT);
+		// props.put(MAIL_SMTP_WRITETIMEOUT, MAIL_SOCKET_TIMEOUT);
+		// if (ssl) {
+		// props.put(MAIL_SMTP_SSL_REQUIRED, ssl);
+		// }
+		//
+		// if (plainTextOverTLS) {
+		// props.put(MAIL_SMTP_SOCKETFACTORY_CLASS,
+		// MAIL_SMTP_SOCKETFACTORY_CLASSNAME);
+		// }
+		//
+		// session = Session.getDefaultInstance(props, new
+		// javax.mail.Authenticator() {
+		// protected PasswordAuthentication getPasswordAuthentication() {
+		// return new PasswordAuthentication(userName, password);
+		// }
+		// });
+		//
+		// mc = (MailcapCommandMap) CommandMap.getDefaultCommandMap();
+		// mc.addMailcap("multipart/*;
+		// x-java-content-handler=com.sun.mail.handlers.multipart_mixed");
+		// mc.addMailcap("message/rfc822;
+		// x-java-content-handler=com.sun.mail.handlers.message_rfc822");
+
+		ServerConfig sc = new ServerConfig(host, port, from, password);
+		if (startTLSRequired) {
+			mailer = new Mailer(sc, TransportStrategy.SMTP_TLS);
+		} else if (ssl) {
+			mailer = new Mailer(sc, TransportStrategy.SMTP_SSL);
+		} else {
+			mailer = new Mailer(sc, TransportStrategy.SMTP_PLAIN);
+		}
+
+	}
+
 	public MailSender() {
 		super();
 	}
@@ -144,7 +149,7 @@ public class MailSender {
 		this.listMailSenderMessage.add(mailSenderMessage);
 	}
 
-	public void sendMessages() throws MessagingException {
+	public void sendMessages() throws MailSenderException {
 		for (MailSenderMessage m : listMailSenderMessage) {
 			this.sendMessage(m);
 		}
@@ -154,75 +159,92 @@ public class MailSender {
 	 * Sends a message to recipients.
 	 * 
 	 * @param mailSenderMessage
-	 * @throws MessagingException
+	 * @throws MailSenderException
 	 */
-	private void sendMessage(MailSenderMessage mailSenderMessage) throws MessagingException {
-		// Only cache DNS lookups for 10 seconds
-		java.security.Security.setProperty("networkaddress.cache.ttl", "10");
+	private void sendMessage(MailSenderMessage mailSenderMessage) throws MailSenderException {
+		// try {
+		// // Only cache DNS lookups for 10 seconds
+		// java.security.Security.setProperty("networkaddress.cache.ttl", "10");
+		//
+		// Message message = new MimeMessage(session);
+		//
+		// message.setFrom(new InternetAddress(from));
+		//
+		// // TO address
+		// if (mailSenderMessage.getTo() != null &&
+		// mailSenderMessage.getTo().size() > 0) {
+		// for (String to : mailSenderMessage.getTo()) {
+		// if (to != null) {
+		// message.addRecipient(Message.RecipientType.TO, new
+		// InternetAddress(to));
+		// }
+		// }
+		// }
+		//
+		// // CC address
+		// if (mailSenderMessage.getCc() != null &&
+		// mailSenderMessage.getCc().size() > 0) {
+		// for (String cc : mailSenderMessage.getCc()) {
+		// if (cc != null) {
+		// message.addRecipient(Message.RecipientType.CC, new
+		// InternetAddress(cc));
+		// }
+		// }
+		// }
+		//
+		// // BCC address
+		// if (mailSenderMessage.getBcc() != null &&
+		// mailSenderMessage.getBcc().size() > 0) {
+		// for (String bcc : mailSenderMessage.getBcc()) {
+		// if (bcc != null) {
+		// message.addRecipient(Message.RecipientType.BCC, new
+		// InternetAddress(bcc));
+		// }
+		// }
+		// }
+		//
+		// // Adds attached files
+		// if (mailSenderMessage.getAttachedFiles() != null &&
+		// mailSenderMessage.getAttachedFiles().size() > 0) {
+		// for (String filename : mailSenderMessage.getAttachedFiles()) {
+		// Multipart multipart = new MimeMultipart();
+		// BodyPart messageBodyPart = new MimeBodyPart();
+		// messageBodyPart = new MimeBodyPart();
+		//
+		// DataSource source = new FileDataSource(filename);
+		// messageBodyPart.setDataHandler(new DataHandler(source));
+		// messageBodyPart.setFileName(filename);
+		// multipart.addBodyPart(messageBodyPart);
+		//
+		// message.setContent(multipart);
+		// }
+		// }
+		//
+		// message.setSubject(mailSenderMessage.getSubject());
+		//
+		// if (mailSenderMessage.isBodyHtml()) {
+		// mc.addMailcap("text/html;
+		// x-java-content-handler=com.sun.mail.handlers.text_html");
+		// mc.addMailcap("text/xml;
+		// x-java-content-handler=com.sun.mail.handlers.text_xml");
+		// message.setContent(mailSenderMessage.getBody(), "text/html;
+		// charset=utf-8");
+		// } else {
+		// mc.addMailcap("text/plain;
+		// x-java-content-handler=com.sun.mail.handlers.text_plain");
+		// message.setText(mailSenderMessage.getBody());
+		// }
+		//
+		// CommandMap.setDefaultCommandMap(mc);
+		//
+		// Transport.send(message);
+		//
+		// } catch (MessagingException e) {
+		// throw new MailSenderException(e);
+		// }
 
-		Message message = new MimeMessage(session);
+		mailer.sendMail(mailSenderMessage.getEmail(), false);
 
-		message.setFrom(new InternetAddress(from));
-
-		// TO address
-		if (mailSenderMessage.getTo() != null && mailSenderMessage.getTo().size() > 0) {
-			for (String to : mailSenderMessage.getTo()) {
-				if (to != null) {
-					message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
-				}
-			}
-		}
-
-		// CC address
-		if (mailSenderMessage.getCc() != null && mailSenderMessage.getCc().size() > 0) {
-			for (String cc : mailSenderMessage.getCc()) {
-				if (cc != null) {
-					message.addRecipient(Message.RecipientType.CC, new InternetAddress(cc));
-				}
-			}
-		}
-
-		// BCC address
-		if (mailSenderMessage.getBcc() != null && mailSenderMessage.getBcc().size() > 0) {
-			for (String bcc : mailSenderMessage.getBcc()) {
-				if (bcc != null) {
-					message.addRecipient(Message.RecipientType.BCC, new InternetAddress(bcc));
-				}
-			}
-		}
-
-		// Adds attached files
-		if (mailSenderMessage.getAttachedFiles() != null && mailSenderMessage.getAttachedFiles().size() > 0) {
-			for (String filename : mailSenderMessage.getAttachedFiles()) {
-				BodyPart messageBodyPart = new MimeBodyPart();
-				Multipart multipart = new MimeMultipart();
-				messageBodyPart = new MimeBodyPart();
-				multipart.addBodyPart(messageBodyPart);
-
-				DataSource source = new FileDataSource(filename);
-				messageBodyPart.setDataHandler(new DataHandler(source));
-				messageBodyPart.setFileName(filename);
-
-				multipart.addBodyPart(messageBodyPart);
-
-				message.setContent(multipart);
-			}
-		}
-
-		message.setSubject(mailSenderMessage.getSubject());
-
-		if (mailSenderMessage.isBodyHtml()) {
-			mc.addMailcap("text/html; x-java-content-handler=com.sun.mail.handlers.text_html");
-			mc.addMailcap("text/xml; x-java-content-handler=com.sun.mail.handlers.text_xml");
-			message.setContent(mailSenderMessage.getBody(), "text/html; charset=utf-8");
-		} else {
-			mc.addMailcap("text/plain; x-java-content-handler=com.sun.mail.handlers.text_plain");
-			message.setText(mailSenderMessage.getBody());
-		}
-
-		CommandMap.setDefaultCommandMap(mc);
-
-		Transport.send(message);
 	}
 
 	public boolean isAuthenticatonRequired() {

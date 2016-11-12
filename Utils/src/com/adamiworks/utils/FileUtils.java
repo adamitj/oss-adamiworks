@@ -34,6 +34,14 @@ public class FileUtils {
 		InputStream inputStream = FileUtils.class.getClassLoader().getResourceAsStream(propFileName);
 
 		if (inputStream == null) {
+			try {
+				inputStream = new FileInputStream(new File(propFileName));
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+		}
+
+		if (inputStream == null) {
 			throw new FileNotFoundException("Property file '" + propFileName + "' not found in the classpath");
 		}
 
@@ -50,7 +58,7 @@ public class FileUtils {
 	public static String readTextFile(File file) {
 		return readTextFile(file.getPath());
 	}
-	
+
 	/**
 	 * Read an entire text file available in classpath.
 	 * 
@@ -58,7 +66,18 @@ public class FileUtils {
 	 * @return
 	 */
 	public static String readTextFile(String fullPathAndfileName) {
-		InputStream is = FileUtils.class.getClassLoader().getResourceAsStream(fullPathAndfileName);
+		InputStream is = null;
+
+		is = FileUtils.class.getClassLoader().getResourceAsStream(fullPathAndfileName);
+
+		if (is == null) {
+			try {
+				is = new FileInputStream(new File(fullPathAndfileName));
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+		}
+
 		Scanner scanner = new Scanner(is);
 		StringBuilder sb = new StringBuilder();
 
@@ -265,6 +284,32 @@ public class FileUtils {
 		}
 
 		return ret;
+	}
+
+	/**
+	 * Reads a file in binary format
+	 * 
+	 * @param file
+	 * @return
+	 */
+	public static byte[] readFile(File file) {
+		byte[] b = new byte[(int) file.length()];
+		try {
+			FileInputStream fs = new FileInputStream(file);
+			fs.read(b);
+//			for (int i = 0; i < b.length; i++) {
+//				System.out.print((char) b[i]);
+//			}
+			fs.close();
+		} catch (FileNotFoundException e) {
+			System.out.println("File Not Found.");
+			e.printStackTrace();
+		} catch (IOException e1) {
+			System.out.println("Error Reading The File.");
+			e1.printStackTrace();
+		}
+
+		return b;
 	}
 
 }
