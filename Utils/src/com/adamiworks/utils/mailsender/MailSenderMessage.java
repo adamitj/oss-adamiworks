@@ -82,7 +82,10 @@ public class MailSenderMessage {
 			this.to = new ArrayList<String>();
 		}
 		this.to.add(to);
-		email.addRecipient(to, to, Message.RecipientType.TO);
+
+		if (to != null) {
+			email.addRecipient(to, to, Message.RecipientType.TO);
+		}
 	}
 
 	public void addCc(String cc) {
@@ -90,7 +93,10 @@ public class MailSenderMessage {
 			this.cc = new ArrayList<String>();
 		}
 		this.cc.add(cc);
-		email.addRecipient(cc, cc, Message.RecipientType.CC);
+
+		if (cc != null) {
+			email.addRecipient(cc, cc, Message.RecipientType.CC);
+		}
 	}
 
 	public void addBcc(String bcc) {
@@ -98,7 +104,10 @@ public class MailSenderMessage {
 			this.bcc = new ArrayList<String>();
 		}
 		this.bcc.add(bcc);
-		email.addRecipient(bcc, bcc, Message.RecipientType.BCC);
+
+		if (bcc != null) {
+			email.addRecipient(bcc, bcc, Message.RecipientType.BCC);
+		}
 	}
 
 	public void addAttachFile(File file) {
@@ -144,6 +153,4 @@ public class MailSenderMessage {
 		return senderEmail;
 	}
 
-	
-	
 }

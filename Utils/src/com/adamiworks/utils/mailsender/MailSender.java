@@ -105,10 +105,11 @@ public class MailSender {
 	private void sendMessage(MailSenderMessage mailSenderMessage) throws MailSenderException {
 		Mailer mailer;
 		ServerConfig sc = new ServerConfig(host, port, from, password);
-		if (startTLSRequired) {
-			mailer = new Mailer(sc, TransportStrategy.SMTP_TLS);
-		} else if (ssl) {
+		if (ssl) {
 			mailer = new Mailer(sc, TransportStrategy.SMTP_SSL);
+		} else if (startTLSRequired) {
+			mailer = new Mailer(sc, TransportStrategy.SMTP_TLS);
+
 		} else {
 			mailer = new Mailer(sc, TransportStrategy.SMTP_PLAIN);
 		}
