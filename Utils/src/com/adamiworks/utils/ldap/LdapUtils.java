@@ -1,13 +1,13 @@
 package com.adamiworks.utils.ldap;
 
 import java.util.ArrayList;
+
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import javax.naming.CommunicationException;
 import javax.naming.Context;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
@@ -17,6 +17,7 @@ import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
+
 
 /**
  * Authenticates with LDAP Servers. Just using a single UID this class goes deep
@@ -104,7 +105,8 @@ public class LdapUtils {
 		this.basedn = basedn;
 		this.varUid = varUid;
 
-		System.setProperty("com.sun.jndi.ldap.object.disableEndpointIdentification", String.valueOf(ignoreCertificates));
+		System.setProperty("com.sun.jndi.ldap.object.disableEndpointIdentification",
+				String.valueOf(ignoreCertificates));
 	}
 
 	/**
@@ -154,13 +156,15 @@ public class LdapUtils {
 	 * @param uid
 	 * @param password
 	 * @return
-	 * @throws NamingException
-	 * @throws InterruptedException
+	 * @throws Exception
 	 */
-	public void authenticate(String uid, String password) throws NamingException, InterruptedException {
+	public void authenticate(String uid, String password) throws Exception {
 
 		String url = getUrl();
 		String dn = this.getDnByUid(uid);
+
+		System.out.println("--> url: " + url);
+		System.out.println("--> dn: " + dn);
 
 		Properties env = new Properties();
 		env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
@@ -225,9 +229,8 @@ public class LdapUtils {
 	/**
 	 * Returns all LDAP tree without attributes.
 	 * 
-	 * @param uidVar
-	 *            the name of main unique identifier attribute. This is need for the
-	 *            empty filter works.
+	 * @param uidVar the name of main unique identifier attribute. This is need for
+	 *               the empty filter works.
 	 * @return a list of all user entries within the LDAP Tree
 	 * @throws NamingException
 	 */
@@ -273,15 +276,15 @@ public class LdapUtils {
 	/**
 	 * Returns the full DN (distinct name) for a given UID
 	 * 
-	 * @param uid
-	 *            the UID name of the user
+	 * @param uid the UID name of the user
 	 * @return full tree path of LDAP
-	 * @throws NamingException
-	 * @throws InterruptedException
+	 * @throws Exception
 	 */
 	@SuppressWarnings("rawtypes")
-	public String getDnByUid(String uid) throws NamingException, InterruptedException {
+	public String getDnByUid(String uid) throws Exception {
 		String url = this.getUrl() + "/" + this.basedn;
+		
+		System.out.println("getDnByUid: "+url);
 
 		Hashtable<String, Object> env = createNoUserLdapProperties(url);
 		String ret = "uid=" + uid;
@@ -294,10 +297,14 @@ public class LdapUtils {
 				try {
 					ctx = new InitialDirContext(env);
 					break;
-				} catch (CommunicationException ce) {
+				} catch (Exception ce) {
+					System.err.println(ce);
+					System.err.println(ce.getMessage());
+					
+					
 					// wait 5 secs before try again
-					System.out.println("ERROR COMMUNICATING WITH LDAP. RETRY IN 5 SEC. STEP " + (i + 1) + " OF 3");
-					Thread.sleep(5000);
+					System.out.println("ERROR COMMUNICATING WITH LDAP. RETRY IN 2 SEC. STEP " + (i + 1) + " OF 3");
+					Thread.sleep(2000);
 
 					if (i + 1 == 3) {
 						throw ce;
@@ -320,11 +327,7 @@ public class LdapUtils {
 				break;
 			}
 
-		} catch (CommunicationException e) {
-			throw e;
-		} catch (InterruptedException e) {
-			throw e;
-		} catch (NamingException e) {
+		} catch (Exception e) {
 			throw e;
 		} finally {
 			if (ctx != null) {
@@ -342,8 +345,7 @@ public class LdapUtils {
 	/**
 	 * Retrieves a list of OU from the baseDn.
 	 * 
-	 * @param uid
-	 *            the Unique identifier
+	 * @param uid the Unique identifier
 	 * @return a list of groups
 	 * @throws NamingException
 	 */
@@ -484,8 +486,7 @@ public class LdapUtils {
 	 * entire entry attributes separated by the string <code>--;;</code>. A new
 	 * entry is created when reaches <b>uidVar</b> attribute.
 	 * 
-	 * @param uidVar
-	 *            The name of unique identifier attribute
+	 * @param uidVar The name of unique identifier attribute
 	 * @return
 	 * @throws NamingException
 	 */
