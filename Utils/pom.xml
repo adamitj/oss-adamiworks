@@ -44,7 +44,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-core</artifactId>
-			<version>4.3.7.Final</version>
+			<version>5.4.24.Final</version>
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>
